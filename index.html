@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Only1 — BNB Dust Sweeper</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bnb: #F0B90B;
+  --bnb2: #FFD60A;
+  --bg: #07060A;
+  --card: #0E0C12;
+  --card2: #131118;
+  --border: rgba(255,255,255,0.07);
+  --text: #F0EEF5;
+  --muted: #5A5468;
+  --green: #22C55E;
+  --red: #EF4444;
+  --purple: #A855F7;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Barlow', sans-serif;
+  min-height: 100vh;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 35% at 50% 0%, rgba(240,185,11,0.07) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* NAV */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(7,6,10,0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-inner {
+  max-width: 900px; margin: 0 auto; padding: 0 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 58px;
+}
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-badge {
+  width: 32px; height: 32px;
+  background: var(--bnb);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 0.78rem; color: #07060A;
+  box-shadow: 0 0 16px rgba(240,185,11,0.3);
+}
+.logo-name { font-weight: 900; font-size: 1rem; }
+.logo-sub { font-family: 'DM Mono', monospace; font-size: 0.58rem; color: var(--bnb); letter-spacing: 2px; text-transform: uppercase; margin-top: 1px; }
+
+#connectBtn {
+  background: var(--bnb); border: none;
+  color: #07060A; font-family: 'Barlow', sans-serif;
+  font-weight: 800; font-size: 0.82rem;
+  padding: 9px 18px; border-radius: 7px; cursor: pointer;
+  transition: all 0.2s;
+}
+#connectBtn:hover { background: var(--bnb2); box-shadow: 0 0 20px rgba(240,185,11,0.35); }
+#connectBtn.connected {
+  background: transparent;
+  border: 1px solid rgba(240,185,11,0.3);
+  color: var(--bnb);
+  font-family: 'DM Mono', monospace; font-size: 0.72rem;
+}
+
+/* MAIN */
+.main { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 20px 60px; }
+
+/* HERO */
+.hero { padding: 48px 0 36px; }
+.hero-tag {
+  font-family: 'DM Mono', monospace; font-size: 0.65rem;
+  color: var(--bnb); letter-spacing: 3px; text-transform: uppercase;
+  margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+}
+.hero-tag::before { content: ''; width: 20px; height: 1px; background: var(--bnb); }
+.hero h1 {
+  font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 900;
+  letter-spacing: -1.5px; line-height: 1.05; margin-bottom: 12px;
+}
+.hero h1 em { font-style: normal; color: var(--bnb); }
+.hero p { color: var(--muted); font-size: 0.95rem; line-height: 1.65; max-width: 440px; }
+
+/* SCAN ROW */
+.scan-row {
+  display: flex; gap: 10px; margin-bottom: 20px;
+}
+.scan-row input {
+  flex: 1;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text);
+  font-family: 'DM Mono', monospace; font-size: 0.76rem;
+  padding: 12px 16px; outline: none;
+  transition: border-color 0.2s;
+}
+.scan-row input::placeholder { color: var(--muted); }
+.scan-row input:focus { border-color: rgba(240,185,11,0.4); }
+#scanBtn {
+  background: transparent; border: 1px solid var(--bnb);
+  color: var(--bnb); font-family: 'Barlow', sans-serif;
+  font-weight: 700; font-size: 0.85rem;
+  padding: 12px 22px; border-radius: 8px; cursor: pointer;
+  transition: all 0.2s; white-space: nowrap;
+}
+#scanBtn:hover { background: rgba(240,185,11,0.1); }
+#scanBtn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* STATS */
+.stats {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 10px; margin-bottom: 20px;
+}
+.stat {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 12px;
+  transition: border-color 0.2s;
+}
+.stat:hover { border-color: rgba(240,185,11,0.2); }
+.stat-val {
+  font-family: 'DM Mono', monospace; font-size: 1.15rem;
+  color: var(--bnb); display: block; font-weight: 500;
+}
+.stat-lbl { font-size: 0.65rem; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.8px; }
+
+/* FILTER */
+.filter-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px; flex-wrap: wrap; gap: 8px;
+}
+.ftabs { display: flex; gap: 5px; }
+.ftab {
+  padding: 5px 12px; font-size: 0.76rem; font-weight: 700;
+  border-radius: 6px; cursor: pointer;
+  border: 1px solid var(--border); color: var(--muted);
+  background: transparent; transition: all 0.14s;
+  font-family: 'Barlow', sans-serif;
+}
+.ftab:hover { color: var(--text); }
+.ftab.active { background: rgba(240,185,11,0.1); border-color: rgba(240,185,11,0.3); color: var(--bnb); }
+
+#sweepBtn {
+  background: var(--bnb); border: none; color: #07060A;
+  font-family: 'Barlow', sans-serif; font-weight: 800;
+  font-size: 0.82rem; padding: 8px 20px; border-radius: 7px;
+  cursor: pointer; transition: all 0.2s;
+}
+#sweepBtn:hover { background: var(--bnb2); box-shadow: 0 0 18px rgba(240,185,11,0.3); }
+#sweepBtn:disabled { opacity: 0.3; cursor: not-allowed; box-shadow: none; }
+
+/* PANEL */
+.panel {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden; margin-bottom: 16px;
+}
+
+/* EMPTY */
+.empty {
+  padding: 52px 20px; text-align: center; color: var(--muted);
+}
+.empty .ei { font-size: 2.4rem; margin-bottom: 12px; }
+.empty p { font-size: 0.86rem; line-height: 1.6; }
+
+/* SELECT ALL */
+.sel-all {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px; border-bottom: 1px solid var(--border);
+  font-size: 0.75rem; color: var(--muted); cursor: pointer;
+  background: rgba(240,185,11,0.02); user-select: none;
+}
+.sel-all:hover { color: var(--text); }
+
+/* ROW */
+.tok-row {
+  display: grid;
+  grid-template-columns: 28px 36px 1fr 80px 70px 60px;
+  gap: 10px; align-items: center;
+  padding: 11px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.025);
+  transition: background 0.12s;
+  animation: fadeIn 0.25s ease forwards; opacity: 0;
+}
+.tok-row:last-child { border-bottom: none; }
+.tok-row:hover { background: rgba(240,185,11,0.03); }
+@keyframes fadeIn { to { opacity: 1; } from { opacity: 0; transform: translateY(3px); } }
+
+.chk {
+  width: 15px; height: 15px;
+  border: 1.5px solid rgba(240,185,11,0.35);
+  border-radius: 3px; cursor: pointer; appearance: none;
+  background: transparent; transition: all 0.13s; justify-self: center;
+}
+.chk:checked {
+  background: var(--bnb); border-color: var(--bnb);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 8'%3E%3Cpath d='M1 4l3 3 5-6' stroke='%2307060A' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: center; background-size: 9px;
+}
+
+.tok-icon {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(240,185,11,0.08);
+  border: 1px solid rgba(240,185,11,0.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem; font-weight: 700; color: var(--muted);
+  overflow: hidden;
+}
+.tok-icon img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+.tok-info {}
+.tok-sym { font-weight: 700; font-size: 0.86rem; }
+.tok-addr { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--muted); margin-top: 1px; }
+
+.tok-bal { font-family: 'DM Mono', monospace; font-size: 0.74rem; color: var(--muted); }
+.tok-val { font-family: 'DM Mono', monospace; font-size: 0.78rem; font-weight: 500; }
+.tok-val.has { color: var(--green); }
+.tok-val.none { color: var(--muted); }
+
+.badge {
+  font-size: 0.6rem; padding: 2px 6px; border-radius: 4px;
+  font-weight: 700; letter-spacing: 0.4px; white-space: nowrap;
+  justify-self: center;
+}
+.b-live { background: rgba(34,197,94,0.1); color: var(--green); }
+.b-dead { background: rgba(239,68,68,0.1); color: var(--red); }
+.b-low { background: rgba(168,85,247,0.1); color: var(--purple); }
+
+/* FOOT */
+.panel-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 16px; border-top: 1px solid var(--border);
+  flex-wrap: wrap; gap: 8px;
+}
+.foot-info { font-size: 0.8rem; color: var(--muted); }
+.foot-info strong { font-family: 'DM Mono', monospace; color: var(--bnb); font-size: 0.92rem; margin-left: 5px; }
+
+#sweepBtn2 {
+  background: var(--bnb); border: none; color: #07060A;
+  font-family: 'Barlow', sans-serif; font-weight: 800;
+  font-size: 0.82rem; padding: 9px 20px; border-radius: 7px;
+  cursor: pointer; transition: all 0.2s;
+}
+#sweepBtn2:hover { background: var(--bnb2); box-shadow: 0 0 18px rgba(240,185,11,0.3); }
+#sweepBtn2:disabled { opacity: 0.3; cursor: not-allowed; box-shadow: none; }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 22px; right: 22px;
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: 9px; padding: 11px 15px; font-size: 0.8rem;
+  max-width: 320px; z-index: 999;
+  animation: toastIn 0.25s ease;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.5); line-height: 1.5;
+}
+.toast.success { border-color: rgba(34,197,94,0.3); }
+.toast.error { border-color: rgba(239,68,68,0.3); }
+.toast.warn { border-color: rgba(240,185,11,0.3); }
+@keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.loader {
+  display: inline-block; width: 12px; height: 12px;
+  border: 2px solid rgba(240,185,11,0.2); border-top-color: var(--bnb);
+  border-radius: 50%; animation: spin 0.65s linear infinite;
+  vertical-align: middle; margin-right: 5px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 600px) {
+  .stats { grid-template-columns: 1fr 1fr; }
+  .scan-row { flex-direction: column; }
+  .tok-row { grid-template-columns: 24px 30px 1fr 60px; }
+  .tok-row > *:nth-child(5), .tok-row > *:nth-child(6) { display: none; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="logo">
+      <div class="logo-badge">O1</div>
+      <div>
+        <div class="logo-name">Only1</div>
+        <div class="logo-sub">BNB Dust Sweeper</div>
+      </div>
+    </div>
+    <button id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="hero">
+    <div class="hero-tag">BNB Chain Tool</div>
+    <h1>Sweep Your <em>Dust Tokens</em><br/>Back Into BNB</h1>
+    <p>Scan your wallet for junk and airdrop tokens. See exactly what they're worth and swap the ones with value back to BNB through PancakeSwap.</p>
+  </div>
+
+  <div class="scan-row">
+    <input id="walletInput" type="text" placeholder="0x... paste your BNB wallet address"/>
+    <button id="scanBtn" onclick="scanWallet()">Scan</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><span class="stat-val" id="sTotal">—</span><div class="stat-lbl">Tokens Found</div></div>
+    <div class="stat"><span class="stat-val" id="sDead">—</span><div class="stat-lbl">Dead / Zero</div></div>
+    <div class="stat"><span class="stat-val" id="sValue">—</span><div class="stat-lbl">Total Value</div></div>
+    <div class="stat"><span class="stat-val" id="sSwept">$0</span><div class="stat-lbl">Value Swept</div></div>
+  </div>
+
+  <div class="filter-row">
+    <div class="ftabs">
+      <button class="ftab active" id="ft-all" onclick="setFilter('all')">All</button>
+      <button class="ftab" id="ft-value" onclick="setFilter('value')">Has Value</button>
+      <button class="ftab" id="ft-dead" onclick="setFilter('dead')">Dead</button>
+    </div>
+    <button id="sweepBtn" onclick="sweep()" disabled>Sweep to BNB →</button>
+  </div>
+
+  <div class="panel">
+    <div id="tokenList">
+      <div class="empty">
+        <div class="ei">🧹</div>
+        <p>Paste your BNB wallet address above<br/>and tap <strong>Scan</strong> to find dust tokens</p>
+      </div>
+    </div>
+    <div class="panel-foot">
+      <div class="foot-info">Selected:<strong id="selVal">$0.00</strong></div>
+      <button id="sweepBtn2" onclick="sweep()" disabled>Sweep to BNB →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const WBNB = '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c';
+const PANCAKE = 'https://pancakeswap.finance/swap';
+let allTokens = [], selected = new Set(), filter = 'all', sweptTotal = 0;
+
+async function connectWallet() {
+  const p = window.ethereum;
+  if (!p) { showToast('error', '❌ No wallet found. Install MetaMask or use Trust Wallet browser.'); return; }
+  try {
+    const accounts = await p.request({ method: 'eth_requestAccounts' });
+    const addr = accounts[0];
+    const btn = document.getElementById('connectBtn');
+    btn.textContent = addr.slice(0,6)+'...'+addr.slice(-4);
+    btn.classList.add('connected');
+    document.getElementById('walletInput').value = addr;
+    showToast('success', '✅ Wallet connected');
+  } catch(e) { showToast('error', '❌ Rejected'); }
+}
+
+async function scanWallet() {
+  const addr = document.getElementById('walletInput').value.trim();
+  if (!addr || !addr.startsWith('0x') || addr.length !== 42) {
+    showToast('error', '❌ Enter a valid BNB wallet address'); return;
+  }
+  const btn = document.getElementById('scanBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span>Scanning...';
+  document.getElementById('tokenList').innerHTML = `<div class="empty"><div class="ei">⚡</div><p>Fetching your tokens...</p></div>`;
+  ['sTotal','sDead','sValue'].forEach(id => document.getElementById(id).textContent = '...');
+
+  try {
+    const res = await fetch(`/api/tokens?address=${addr}`);
+    const data = await res.json();
+
+    if (!data.success || !data.tokens.length) {
+      document.getElementById('tokenList').innerHTML = `<div class="empty"><div class="ei">✨</div><p>No BEP-20 tokens found in this wallet.</p></div>`;
+      ['sTotal','sDead','sValue'].forEach(id => document.getElementById(id).textContent = '0');
+      btn.disabled = false; btn.innerHTML = 'Scan'; return;
+    }
+
+    allTokens = data.tokens;
+    selected = new Set(allTokens.filter(t => t.valueUsd > 0.01).map(t => t.address));
+
+    const dead = allTokens.filter(t => t.valueUsd < 0.01).length;
+    const total = allTokens.reduce((s,t) => s + (t.valueUsd||0), 0);
+
+    document.getElementById('sTotal').textContent = allTokens.length;
+    document.getElementById('sDead').textContent = dead;
+    document.getElementById('sValue').textContent = '$' + total.toFixed(2);
+
+    render();
+    updateSummary();
+    showToast('success', `✅ Found ${allTokens.length} tokens — $${total.toFixed(2)} total value`);
+  } catch(e) {
+    document.getElementById('tokenList').innerHTML = `<div class="empty"><div class="ei">⚠️</div><p>Scan failed: ${e.message?.slice(0,80)||'Try again'}</p></div>`;
+    showToast('error', '❌ ' + (e.message?.slice(0,60)||'Scan failed'));
+  }
+  btn.disabled = false; btn.innerHTML = 'Scan';
+}
+
+function setFilter(f) {
+  filter = f;
+  ['all','value','dead'].forEach(id => document.getElementById('ft-'+id).classList.toggle('active', id === f));
+  render();
+}
+
+function render() {
+  let tokens = allTokens;
+  if (filter === 'value') tokens = allTokens.filter(t => t.valueUsd > 0.01);
+  if (filter === 'dead') tokens = allTokens.filter(t => t.valueUsd <= 0.01);
+
+  if (!tokens.length) {
+    document.getElementById('tokenList').innerHTML = `<div class="empty"><div class="ei">🔍</div><p>No tokens in this category.</p></div>`;
+    return;
+  }
+
+  const allSel = tokens.every(t => selected.has(t.address));
+  let html = `<div class="sel-all" onclick="toggleAll()"><input type="checkbox" class="chk" id="selAllChk" ${allSel?'checked':''} onclick="event.stopPropagation();toggleAll()"/> Select All (${tokens.length})</div>`;
+
+  tokens.forEach((t, i) => {
+    const chk = selected.has(t.address) ? 'checked' : '';
+    const val = t.valueUsd > 0 ? '$'+t.valueUsd.toFixed(4) : '$0.00';
+    const valClass = t.valueUsd > 0.01 ? 'has' : 'none';
+    const bal = t.balance > 0.0001 ? t.balance.toLocaleString(undefined, {maximumFractionDigits:4}) : '< 0.0001';
+    const badge = t.status === 'live' ? '<span class="badge b-live">LIVE</span>' : t.status === 'low' ? '<span class="badge b-low">LOW</span>' : '<span class="badge b-dead">DEAD</span>';
+    const icon = t.logo ? `<img src="${t.logo}" onerror="this.style.display='none';this.parentNode.textContent='${t.symbol.slice(0,3)}'"/>` : t.symbol.slice(0,3).toUpperCase();
+
+    html += `<div class="tok-row" style="animation-delay:${i*0.025}s">
+      <input type="checkbox" class="chk" ${chk} onchange="toggleToken('${t.address}')"/>
+      <div class="tok-icon">${icon}</div>
+      <div class="tok-info">
+        <div class="tok-sym">${t.symbol}</div>
+        <div class="tok-addr">${t.address.slice(0,8)}...${t.address.slice(-4)}</div>
+      </div>
+      <div class="tok-bal">${bal}</div>
+      <div class="tok-val ${valClass}">${val}</div>
+      ${badge}
+    </div>`;
+  });
+
+  document.getElementById('tokenList').innerHTML = html;
+  document.getElementById('sweepBtn').disabled = selected.size === 0;
+  document.getElementById('sweepBtn2').disabled = selected.size === 0;
+}
+
+function toggleAll() {
+  let tokens = allTokens;
+  if (filter === 'value') tokens = allTokens.filter(t => t.valueUsd > 0.01);
+  if (filter === 'dead') tokens = allTokens.filter(t => t.valueUsd <= 0.01);
+  const allSel = tokens.every(t => selected.has(t.address));
+  if (allSel) tokens.forEach(t => selected.delete(t.address));
+  else tokens.forEach(t => selected.add(t.address));
+  render(); updateSummary();
+}
+
+function toggleToken(addr) {
+  selected.has(addr) ? selected.delete(addr) : selected.add(addr);
+  updateSummary();
+}
+
+function updateSummary() {
+  const sel = allTokens.filter(t => selected.has(t.address));
+  const val = sel.reduce((s,t) => s + (t.valueUsd||0), 0);
+  document.getElementById('selVal').textContent = '$' + val.toFixed(4);
+  document.getElementById('sweepBtn').disabled = sel.length === 0;
+  document.getElementById('sweepBtn2').disabled = sel.length === 0;
+}
+
+async function sweep() {
+  const sel = allTokens.filter(t => selected.has(t.address) && t.valueUsd > 0.01);
+  if (!sel.length) { showToast('warn', '⚠️ Select tokens with value ($0.01+) to sweep.'); return; }
+  showToast('success', `🔄 Opening PancakeSwap for ${sel.length} token(s)...`);
+  for (const t of sel) {
+    window.open(`${PANCAKE}?inputCurrency=${t.address}&outputCurrency=${WBNB}`, '_blank');
+    await new Promise(r => setTimeout(r, 500));
+  }
+  const total = sel.reduce((s,t) => s+(t.valueUsd||0), 0);
+  sweptTotal += total;
+  document.getElementById('sSwept').textContent = '$' + sweptTotal.toFixed(2);
+}
+
+function showToast(type, msg) {
+  const t = document.createElement('div');
+  t.className = 'toast ' + type; t.innerHTML = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 5500);
+}
+
+window.addEventListener('load', () => {
+  if (window.ethereum?.selectedAddress) {
+    const addr = window.ethereum.selectedAddress;
+    document.getElementById('connectBtn').textContent = addr.slice(0,6)+'...'+addr.slice(-4);
+    document.getElementById('connectBtn').classList.add('connected');
+    document.getElementById('walletInput').value = addr;
+  }
+});
+</script>
+</body>
+</html>
